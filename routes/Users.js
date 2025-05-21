@@ -12,65 +12,87 @@ router.get('/users', async (req, res) => {
         const userList = await User.findAll({
             attributes: { exclude: ['passwordHash'] }
         });
-        console.log('Lista de usuarios encontrada: ');
         res.status(200).json(userList);
     } catch (error) {
-        res.status(500).json({message: 'Error interno del servidor'});
-        console.log('Error al recuperar lista de usuarios: ', error.message);
+        console.error('Error al recuperar lista de usuarios:', error.message);
+        res.status(500).json({ message: 'Error interno del servidor' });
     }
 });
 
 /**
- * @desc Recuperar un usuario mediante su id
- * @param {id}
+ * @desc Recuperar un usuario mediante su email
+ * @param {email}
  */
-router.get('/users/:id', async (req, res) => {
-    const {id} = require.params;
+router.get('/users/email/:email', async (req, res) => {
+    const { email } = req.params;
     try {
-        const users = await User.findByPk(id);
+        const user = await User.findOne({
+            where: { email },
+            attributes: { exclude: ['passwordHash'] }
+        });
 
-        console.log('Se recuperó el usuario con éxito');
-        res.status(200).json(users);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+
+        res.status(200).json(user);
     } catch (error) {
-        console.error('No se pudo recuperar el usuario: ', error.message);
-        res.status(500).json({message: error.message});
+        console.error('No se pudo recuperar el usuario:', error.message);
+        res.status(500).json({ message: 'Error interno del servidor' });
     }
 });
 
 /**
  * @desc API para insertar un nuevo usuario.
- * @param {userName}
- * @param {email}
- * @param {password}
+ * @param {userName, email, password}
  */
 router.post('/users', async (req, res) => {
-    const { userName, email, password } = require.params;
+    const { userName, email, password } = req.body;
 
     try {
-        const newUser = await User.create({
-            userName: userName,
-            email: email,
-            password: password
-        });
-
-        if (!newUser) {
-            console.log('No se creó el usuario correctamente');
-        } else {
-            res.status(200).json('El usuario se creó correctamente');
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+            return res.status(409).json({ message: 'El correo ya está registrado' });
         }
 
-    } catch(error) {
-        console.error('Fallo al crear el usuario: ', error.message);
-        res.status(400).json({message: error.message});
+        // Sin hash de contraseña por ahora (por falta de tiempo)
+        const passwordHash = password;
+
+        const newUser = await User.create({
+            userName,
+            email,
+            passwordHash
+        });
+
+        res.status(201).json({ message: 'Usuario creado correctamente', userId: newUser.id });
+    } catch (error) {
+        console.error('Fallo al crear el usuario:', error.message);
+        res.status(400).json({ message: error.message });
     }
 });
 
 /**
  * @desc API para actualizar la información de un usuario.
- * @param {id} -Parámetro para encontrar el usuario a editar.
+ * @param {id}
  */
 router.put('/users/:id', async (req, res) => {
+    const { id } = req.params;
+    const { userName, email } = req.body;
 
+    try {
+        const user = await User.findByPk(id);
+        if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+        user.userName = userName || user.userName;
+        user.email = email || user.email;
+
+        await user.save();
+
+        res.status(200).json({ message: 'Usuario actualizado correctamente' });
+    } catch (error) {
+        console.error('Error al actualizar el usuario:', error.message);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
 });
 
 /**
@@ -78,12 +100,19 @@ router.put('/users/:id', async (req, res) => {
  * @param {id}
  */
 router.delete('/users/:id', async (req, res) => {
-    const { id } = require.params;
+    const { id } = req.params;
 
     try {
+        const deletedCount = await User.destroy({ where: { id } });
 
-    } catch(error) {
+        if (deletedCount === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
 
+        res.status(200).json({ message: 'Usuario eliminado correctamente' });
+    } catch (error) {
+        console.error('Error al eliminar el usuario:', error.message);
+        res.status(500).json({ message: 'Error interno del servidor' });
     }
 });
 
