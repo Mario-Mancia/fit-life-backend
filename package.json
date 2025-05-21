@@ -1,0 +1,21 @@
+{
+  "name": "fitlife",
+  "version": "1.0.0",
+  "description": "Backend server for the FitLife Android application.",
+  "main": "app.js",
+  "scripts": {
+    "test": "node app.js"
+  },
+  "keywords": [
+    "app-backend-server"
+  ],
+  "author": "Mario-Mancia",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.1",
+    "sequelize": "^6.37.7"
+  }
+}
