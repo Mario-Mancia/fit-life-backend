@@ -6,8 +6,8 @@ const userRoutes = require('./routes/Users.js');
 const recordRoutes = require('./routes/UserRecords.js')
 
 app.use(express.json());
-app.use('/api', userRoutes);
-app.use('/api', recordRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/records', recordRoutes);
 
 const PORT = process.env.PORT || 3000;
 const ADDRESS = process.env.ADDRESS || '';
