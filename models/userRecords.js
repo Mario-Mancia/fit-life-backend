@@ -40,8 +40,11 @@ const UserRecord = sequelize.define('UserRecord', {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW
     }
-
-});
+}, {
+    timestamps: false,
+    tableName: 'userRecords'
+}
+);
 
 User.hasMany(UserRecord, { foreignKey: 'userId', onDelete: 'CASCADE' });
 UserRecord.belongsTo(User, { foreignKey: 'userId' });

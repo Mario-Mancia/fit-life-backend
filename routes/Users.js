@@ -54,14 +54,10 @@ router.post('/users', async (req, res) => {
         if (existingUser) {
             return res.status(409).json({ message: 'El correo ya está registrado' });
         }
-
-        // Sin hash de contraseña por ahora (por falta de tiempo)
-        const passwordHash = password;
-
         const newUser = await User.create({
             userName,
             email,
-            passwordHash
+            passwordHash: password
         });
 
         res.status(201).json({ message: 'Usuario creado correctamente', userId: newUser.id });
@@ -77,7 +73,7 @@ router.post('/users', async (req, res) => {
  */
 router.put('/users/:id', async (req, res) => {
     const { id } = req.params;
-    const { userName, email } = req.body;
+    const { userName, email, password } = req.body;
 
     try {
         const user = await User.findByPk(id);
@@ -85,7 +81,7 @@ router.put('/users/:id', async (req, res) => {
 
         user.userName = userName || user.userName;
         user.email = email || user.email;
-
+        user.passwordHash = password || user.passwordHash
         await user.save();
 
         res.status(200).json({ message: 'Usuario actualizado correctamente' });
